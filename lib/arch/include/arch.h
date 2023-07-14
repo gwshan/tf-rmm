@@ -493,6 +493,7 @@
 #define ID_AA64DFR0_EL1_PMUVer_WIDTH		UL(4)
 
 /* Performance Monitors Extension version */
+#define ID_AA64DFR0_EL1_PMUv3p5			UL(5)
 #define ID_AA64DFR0_EL1_PMUv3p7			UL(7)
 #define ID_AA64DFR0_EL1_PMUv3p8			UL(8)
 #define ID_AA64DFR0_EL1_PMUv3p9			UL(9)
