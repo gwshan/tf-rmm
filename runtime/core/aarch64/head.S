@@ -131,6 +131,7 @@ func rmm_entry
 	bl	plat_setup
 	bl	xlat_enable_mmu_el2
 	bl	pauth_init_enable_el2
+//1:	b	1b
 
 	bl	rmm_main
 	b	smc_ret
