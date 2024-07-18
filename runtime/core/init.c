@@ -67,6 +67,9 @@ void rmm_main(void)
 	 * Report project name, version, build type and
 	 * commit information if it is present
 	 */
+	NOTICE("--------------------------------------------------\n");
+	NOTICE("---            Gavin's private build           ---\n");
+	NOTICE("--------------------------------------------------\n");
 	NOTICE("Booting %s v.%s(%s) %s Built with %s\n",
 		NAME, VERSION, RMM_BUILD_TYPE, COMMIT_INFO,
 #ifdef __clang__
