@@ -7,6 +7,7 @@
 #include <assert.h>
 #include <buffer.h>
 #include <errno.h>
+#include <debug.h>
 #include <granule.h>
 #include <measurement.h>
 #include <realm.h>
@@ -858,10 +859,12 @@ static unsigned long validate_data_create_unknown(unsigned long map_addr,
 						  struct rd *rd)
 {
 	if (!addr_in_par(rd, map_addr)) {
+		INFO("%s: Invalid map_addr=%lx\n", __func__, map_addr);
 		return RMI_ERROR_INPUT;
 	}
 
 	if (!validate_map_addr(map_addr, S2TT_PAGE_LEVEL, rd)) {
+		INFO("%s: Invalid map_addr=%lx (S2 pgtable)\n", __func__, map_addr);
 		return RMI_ERROR_INPUT;
 	}
 
@@ -905,6 +908,8 @@ static unsigned long data_create(unsigned long rd_addr,
 				    rd_addr,
 				    GRANULE_STATE_RD,
 				    &g_rd)) {
+		INFO("%s: Can't find dst and rd granule (%lx, %lx, %lx, %lx)\n",
+		     __func__, rd_addr, data_addr, map_addr, flags);
 		return RMI_ERROR_INPUT;
 	}
 
@@ -927,6 +932,8 @@ static unsigned long data_create(unsigned long rd_addr,
 	 */
 	if (!s2_ctx->enable_lpa2) {
 		if ((data_addr >= (UL(1) << S2TT_MAX_PA_BITS))) {
+			INFO("%s: data_addr=%lx exceeds limit=%lx\n",
+			     __func__, data_addr, UL(1) << S2TT_MAX_PA_BITS);
 			ret = RMI_ERROR_INPUT;
 			goto out_unmap_rd;
 		}
@@ -966,6 +973,8 @@ static unsigned long data_create(unsigned long rd_addr,
 			 */
 			granule_memzero_mapped(data);
 			buffer_unmap(data);
+			INFO("%s: Can't read src granule (%lx, %lx, %lx, %lx)\n",
+                             __func__, rd_addr, data_addr, map_addr, flags);
 			ret = RMI_ERROR_INPUT;
 			goto out_unmap_ll_table;
 		}
@@ -1014,12 +1023,17 @@ unsigned long smc_data_create(unsigned long rd_addr,
 
 	if ((flags != RMI_NO_MEASURE_CONTENT) &&
 	    (flags != RMI_MEASURE_CONTENT)) {
+		INFO("%s: Invalid flags (%lx, %lx, %lx, %lx, %lx)\n",
+		     __func__, rd_addr, data_addr, map_addr, src_addr, flags);
 		return RMI_ERROR_INPUT;
 	}
 
 	g_src = find_granule(src_addr);
 	if ((g_src == NULL) ||
 		(granule_unlocked_state(g_src) != GRANULE_STATE_NS)) {
+		INFO("%s: %s ((%lx, %lx, %lx, %lx, %lx)\n", __func__,
+		     (g_src == NULL) ? "No source granule" : "Invalid source granule state",
+		     rd_addr, data_addr, map_addr, src_addr, flags); 
 		return RMI_ERROR_INPUT;
 	}
 
