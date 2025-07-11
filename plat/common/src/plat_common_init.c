@@ -148,6 +148,7 @@ int plat_cmn_setup(struct xlat_mmap_region *plat_regions,
 	/* Common regions sorted by ascending VA */
 	struct xlat_mmap_region regions[COMMON_REGIONS] = {
 #if APP_COUNT != 0
+#error "APP_COUNT != 0"
 		RMM_APP,
 #endif
 		RMM_CODE,
