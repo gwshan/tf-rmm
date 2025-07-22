@@ -34,8 +34,8 @@ unsigned long get_feature_register_0(void)
 		     INPLACE(RMI_FEATURE_REGISTER_0_HASH_SHA_512,
 						RMI_FEATURE_TRUE);
 
-	/* RMM supports PMUv3p7+ */
-	assert(read_pmu_version() >= ID_AA64DFR0_EL1_PMUv3p7);
+	/* RMM supports PMUv3p7+, but the CPU type (max) only supports PMUv3p5 */
+	// assert(read_pmu_version() >= ID_AA64DFR0_EL1_PMUv3p7);
 
 	/* Set support for PMUv3 */
 	feat_reg0 |= INPLACE(RMI_FEATURE_REGISTER_0_PMU_EN,
