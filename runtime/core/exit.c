@@ -6,6 +6,7 @@
 
 #include <arch.h>
 #include <arch_helpers.h>
+#include <debug.h>
 #include <buffer.h>
 #include <esr.h>
 #include <exit.h>
@@ -137,6 +138,7 @@ static bool handle_sync_external_abort(struct rec *rec,
 		 * Inject the sync. abort into the Realm.
 		 * Report the exception to the host.
 		 */
+		ERROR("%s: inject_sync_idabort()\n", __func__);
 		inject_sync_idabort(ESR_EL2_ABORT_FSC_SEA);
 		/*
 		 * Fall through.
@@ -216,6 +218,12 @@ static bool handle_data_abort(struct rec *rec, struct rmi_rec_exit *rec_exit,
 	 * the granule's RIPAS is EMPTY.
 	 */
 	if ((fipa >= rec_ipa_size(rec)) || ipa_is_empty(fipa, rec)) {
+		ERROR("%s: fipa=0x%lx, rec_ipa_size()=0x%lx, empty=%s\n",
+		      __func__, fipa, rec_ipa_size(rec),
+		      ipa_is_empty(fipa, rec) ? "yes" : "no");
+		ERROR("%s: inject_sync_idabort()\n", __func__);
+
+		while (1);	/* never return */
 		inject_sync_idabort(ESR_EL2_ABORT_FSC_SEA);
 		return true;
 	}
@@ -269,6 +277,7 @@ static bool handle_instruction_abort(struct rec *rec, struct rmi_rec_exit *rec_e
 	 */
 	if ((fipa >= rec_ipa_size(rec)) ||
 			!access_in_rec_par(rec, fipa) || ipa_is_empty(fipa, rec)) {
+		ERROR("%s: inject_sync_idabort()\n", __func__);
 		inject_sync_idabort(ESR_EL2_ABORT_FSC_SEA);
 		return true;
 	}

@@ -3,6 +3,7 @@
  * SPDX-FileCopyrightText: Copyright TF-RMM Contributors.
  */
 
+#include <debug.h>
 #include <buffer.h>
 #include <granule.h>
 #include <realm.h>
@@ -44,6 +45,10 @@ enum s2_walk_status realm_ipa_to_pa(struct rec *rec,
 	unsigned long s2tte, *ll_table;
 	enum s2_walk_status walk_status;
 	struct s2tt_context *s2_ctx;
+	bool debug = (ipa == 0x9000000) ? true : false;
+
+	if (debug)
+		INFO("%s: ipa=0x%lx\n", __func__, ipa);
 
 	if (!GRANULE_ALIGNED(ipa) || !addr_in_rec_par(rec, ipa)) {
 		return WALK_INVALID_PARAMS;
@@ -58,6 +63,10 @@ enum s2_walk_status realm_ipa_to_pa(struct rec *rec,
 	assert(ll_table != NULL);
 
 	s2tte = s2tte_read(&ll_table[wi.index]);
+	if (debug) {
+		INFO("%s: S2TTE=0x%016lx wi.index=0x%lx wi.last_level=%ld\n",
+		     __func__, s2tte, wi.index, wi.last_level);
+	}
 
 	if (s2tte_is_assigned_ram(s2_ctx, s2tte, wi.last_level)) {
 		unsigned long offset;
@@ -68,19 +77,27 @@ enum s2_walk_status realm_ipa_to_pa(struct rec *rec,
 		s2_walk->pa += offset;
 		s2_walk->ripas_val = RIPAS_RAM;
 		walk_status = WALK_SUCCESS;
+		if (debug)
+			INFO("%s: matched s2tte_is_assigned_ram()\n", __func__);
 	} else {
 		if (s2tte_is_unassigned_destroyed(s2_ctx, s2tte) ||
 		    s2tte_is_assigned_destroyed(s2_ctx,
 						s2tte, wi.last_level)) {
 			s2_walk->ripas_val = RIPAS_DESTROYED;
+			if (debug)
+				INFO("%s: matched s2tte_is_xxx_destroyed()\n", __func__);
 		} else if (s2tte_is_unassigned_ram(s2_ctx, s2tte)) {
 			s2_walk->ripas_val = RIPAS_RAM;
+			if (debug)
+				INFO("%s: matched s2tte_is_unassigned_ram()\n", __func__);
 		} else {
 			/*
 			 * Only unassigned_empty & assigned_empty
 			 * are left as an option.
 			 */
 			s2_walk->ripas_val = RIPAS_EMPTY;
+			if (debug)
+				INFO("%s: RIPAS_EMPTY\n", __func__);
 		}
 
 		granule_unlock(wi.g_llt);

@@ -22,6 +22,32 @@
 
 #define RMI_FEATURE_MIN_IPA_SIZE	PARANGE_WIDTH_32BITS
 
+#if 0
+static void check_realm_pgtable(struct rd *rd)
+{
+	struct s2tt_context *s2_ctx = &rd->s2_ctx;
+	struct s2tt_walk wi;
+	unsigned long *ll_table, s2tte, ipa = 0x90000;
+
+	granule_lock(s2_ctx->g_rtt, GRANULE_STATE_RTT);
+	s2tt_walk_lock_unlock(s2_ctx, ipa, S2TT_PAGE_LEVEL, &wi);
+
+	ll_table = buffer_granule_map(wi.g_llt, SLOT_RTT);
+	assert(ll_table != NULL);
+
+	s2tte = s2tte_read(&ll_table[wi.index]);
+	buffer_unmap(ll_table);
+
+	granule_unlock(wi.g_llt);
+
+	/* Never return */
+	INFO("%s: index=0x%lx  last_level=%ld\n", __func__, wi.index, wi.last_level);
+	INFO("%s: ipa=0x%lx,   s2tte=0x%016lx\n", __func__, ipa, s2tte);
+
+	while (1);
+}
+#endif
+
 unsigned long smc_realm_activate(unsigned long rd_addr)
 {
 	struct rd *rd;
@@ -37,6 +63,9 @@ unsigned long smc_realm_activate(unsigned long rd_addr)
 	assert(rd != NULL);
 
 	if (get_rd_state_locked(rd) == REALM_NEW) {
+#if 0
+		check_realm_pgtable(rd);
+#endif
 		set_rd_state(rd, REALM_ACTIVE);
 		ret = RMI_SUCCESS;
 	} else {
