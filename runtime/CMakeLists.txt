@@ -86,6 +86,7 @@ target_sources(rmm-runtime
             "rmi/rec.c"
             "rmi/rtt.c"
             "rmi/run.c"
+            "rmi/sro.c"
             "rmi/version.c"
             "rmi/pdev.c"
             "rmi/vdev.c")
