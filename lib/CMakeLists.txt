@@ -15,6 +15,7 @@ target_link_libraries(rmm-lib
               rmm-lib-granule
               rmm-lib-mec
               rmm-lib-rmm_el3_ifc
+              rmm-lib-runtime_ctrl
               rmm-lib-smc
               rmm-lib-smmuv3
               rmm-lib-s2tt
@@ -33,6 +34,7 @@ add_subdirectory("granule")
 add_subdirectory("glob_data")
 add_subdirectory("mbedtls")
 add_subdirectory("mec")
+add_subdirectory("runtime_ctrl")
 add_subdirectory("rmm_el3_ifc")
 add_subdirectory("smc")
 add_subdirectory("smmuv3")
