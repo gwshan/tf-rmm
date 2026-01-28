@@ -32,6 +32,31 @@
 /* Prototype of the handles to use for CONTINUE operations */
 typedef void(*sro_handle_cb)(struct smc_args *arg, struct smc_result *res);
 
+/*
+ * Data structure with the information to continue a REC related operation.
+ */
+struct sro_rec_ctx {
+	/* Index of the callback to invoke */
+	unsigned int cb_id;
+
+	/* Parameters for REC creation */
+	unsigned long rd_addr;
+	unsigned long rec_addr;
+	unsigned long rec_params_addr;
+
+	/* Error condition in case REC_CREATE fails */
+	unsigned long ret_err;
+
+	/* List of IPAs for the auxiliary granules donated by the host */
+	uintptr_t aux_granules[MAX_REC_AUX_GRANULES];
+
+	/* Number of granules requested */
+	unsigned int requested_aux_granules;
+
+	/* Number of granules donated so far */
+	unsigned int total_donated;
+};
+
 struct sro_context {
 	/* Initiating RMI command */
 	unsigned long init_command;
@@ -66,7 +91,9 @@ struct sro_context {
 	struct smc_result prev_res;
 
 	/* Union with an structure for all the possible SRO commands */
-	union{};
+	union{
+		struct sro_rec_ctx rec_ctx;
+	};
 };
 
 /*
