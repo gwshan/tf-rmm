@@ -3,8 +3,7 @@
 # SPDX-FileCopyrightText: Copyright TF-RMM Contributors.
 #
 
-# Make this library as an empty interface library when RMM_V1_1 is not set or
-# for CBMC build
+# Make this library as an empty interface library for CBMC build
 if(RMM_CBMC_STATIC_ANALYSIS)
     add_library(rmm-pci_tdisp_requester_lib INTERFACE)
     return()

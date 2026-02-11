@@ -162,10 +162,6 @@ static int rtt_data_unmap_range(void *rd, uintptr_t base_ipa, uintptr_t top_ipa)
 	return 0;
 }
 
-#ifndef RMM_V1_1
-#error Host build only supports RMM_V1_1=ON
-#endif
-
 static int host_create_realm_and_activate(struct host_realm *realm)
 {
 	struct smc_result result;
