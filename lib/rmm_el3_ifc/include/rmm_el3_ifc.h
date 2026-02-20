@@ -251,6 +251,7 @@ COMPILER_ASSERT(U(offsetof(struct el3_token_sign_response, signature_buf)) == 0x
  */
 unsigned int rmm_el3_ifc_get_version(void);
 uintptr_t rmm_el3_ifc_get_shared_buf_pa(void);
+unsigned int rmm_el3_ifc_get_total_cpus(void);
 
 static inline size_t rmm_el3_ifc_get_shared_buf_size(void)
 {

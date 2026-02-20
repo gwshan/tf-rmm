@@ -8,6 +8,7 @@ add_library(rmm-lib-sro_context)
 target_link_libraries(rmm-lib-sro_context
     PRIVATE rmm-lib-arch
             rmm-lib-debug
+            rmm-lib-rmm_el3_ifc
             rmm-lib-smc)
 
 target_include_directories(rmm-lib-sro_context

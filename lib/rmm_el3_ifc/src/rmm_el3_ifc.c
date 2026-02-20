@@ -14,6 +14,7 @@
 /* Boot Interface arguments */
 static uintptr_t rmm_shared_buffer_start_pa;
 static unsigned long rmm_el3_ifc_abi_version;
+static unsigned long rmm_total_cpus;
 
 /* Platform parameters */
 uintptr_t rmm_shared_buffer_start_va;
@@ -68,6 +69,9 @@ int rmm_el3_ifc_init(unsigned long x0, unsigned long x1, unsigned long x2,
 		rmm_el3_ifc_report_fail_to_el3(E_RMM_BOOT_CPUS_OUT_OF_RANGE);
 	}
 
+	/* Maintain a copy of the number of CPUs */
+	rmm_total_cpus = x2;
+	inv_dcache_range((uintptr_t)&rmm_total_cpus, sizeof(rmm_total_cpus));
 	/*
 	 * Validate that the CPU Id is in the range of the maximum
 	 * number of CPUs.
@@ -125,4 +129,12 @@ unsigned int rmm_el3_ifc_get_version(void)
 	assert(initialized == true);
 
 	return (unsigned int)rmm_el3_ifc_abi_version;
+}
+
+/* Get the number of CPUs reported by EL3 */
+unsigned int rmm_el3_ifc_get_total_cpus(void)
+{
+	assert(initialized == true);
+
+	return (unsigned int)rmm_total_cpus;
 }

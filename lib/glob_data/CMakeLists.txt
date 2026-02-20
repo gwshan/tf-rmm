@@ -13,7 +13,8 @@ target_link_libraries(rmm-lib-glob_data
             rmm-lib-mec
             rmm-lib-xlat_low_va
             rmm-lib-rmm_el3_ifc
-            rmm-lib-smmuv3)
+            rmm-lib-smmuv3
+            rmm-lib-sro_context)
 
 target_include_directories(rmm-lib-glob_data
     PUBLIC "include"
