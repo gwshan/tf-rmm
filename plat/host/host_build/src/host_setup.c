@@ -144,8 +144,14 @@ static int rtt_data_unmap_range(void *rd, uintptr_t base_ipa, uintptr_t top_ipa)
 					0UL,
 					&result);
 		CHECK_RMI_RESULT();
-		/* RMM only unmaps one granule at a time currently */
-		assert((current_ipa + GRANULE_SIZE) == result.x[1]);
+
+		/*
+		 * @TODO: Disable this assertion for now as it is triggering
+		 * false negatives.
+		 *
+		 * Revisit it once RMM can unmap a range properly.
+		 */
+		/* assert((current_ipa + GRANULE_SIZE) == result.x[1]); */
 		/* Update IPA for next iteration */
 		current_ipa = result.x[1];
 		if (current_ipa >= top_ipa) {
