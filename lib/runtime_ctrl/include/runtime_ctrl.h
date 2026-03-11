@@ -23,16 +23,16 @@
 /*
  * Callback prototype to be invoked to check if a command can continue or not.
  *
- * 	Input:
- * 		- args: Pointer to a generic data structure passed down from
- * 			the caller to rtc_exit(). There is no sanitisation
- * 			of the input so it is expected that the caller of
- * 			rtc_exit() passes a pointer to a data structure which
- * 			is compatible with the one expected by the callback.
- * 			The pointer can be NULL if no arguments are needed.
+ *	Input:
+ *		- args: Pointer to a generic data structure passed down from
+ *			the caller to rtc_exit(). There is no sanitisation
+ *			of the input so it is expected that the caller of
+ *			rtc_exit() passes a pointer to a data structure which
+ *			is compatible with the one expected by the callback.
+ *			The pointer can be NULL if no arguments are needed.
  *
- * 	Return: 'True' if the command must exit (e.g. RMI_CONTINUE) or 'False'
- * 		otherwise.
+ *	Return: 'True' if the command must exit (e.g. RMI_CONTINUE) or 'False'
+ *		otherwise.
  */
 typedef bool (*rtc_check_exit_cb)(void *args);
 
@@ -58,8 +58,8 @@ void rtc_set_command(unsigned long fid);
  *			rtc_register_callback(). Note that the pointer is
  *			allowed to be NULL if no args are required.
  *
- * 	Return: 'True' if the command must exit (e.g. RMI_CONTINUE) or 'False'
- * 		if it can continue execution.
+ *	Return: 'True' if the command must exit (e.g. RMI_CONTINUE) or 'False'
+ *		if it can continue execution.
  */
 bool rtc_exit(void *args);
 

@@ -48,7 +48,7 @@ static void rmi_op_dispatch(struct smc_args *args, struct smc_result *res)
 
 	assert(sro != NULL);
 
-	handle_id = RMI_HANDLER_ID(sro->init_command);
+	handle_id = (unsigned int)RMI_HANDLER_ID(sro->init_command);
 	assert(handle_id < ARRAY_SIZE(sro_handles));
 	assert(sro_handles[handle_id].cb != NULL);
 
@@ -79,11 +79,11 @@ static void rmi_op_dispatch(struct smc_args *args, struct smc_result *res)
 		/* Update the memory flags on the SRO context if needed */
 		if (unpack_return_code(res->x[0]).status == RMI_INCOMPLETE) {
 			sro->can_cancel =
-				!!(EXTRACT(RMI_OP_CAN_CANCEL_BIT, res->x[0]));
+				(EXTRACT(RMI_OP_CAN_CANCEL_BIT, res->x[0]) != 0UL);
 
 			if (EXTRACT(RMI_OP_MEM_REQ, res->x[0]) == RMI_OP_MEM_REQ_DONATE) {
 				sro->is_contig =
-					!!(EXTRACT(RMI_OP_DONATE_MEM_CONTIG, res->x[2]));
+					(EXTRACT(RMI_OP_DONATE_MEM_CONTIG, res->x[2]) != 0UL);
 			}
 		}
 
@@ -106,8 +106,8 @@ static void do_rmi_mem_op(unsigned long fid,
 	 * @TODO: Validate the following failure conditions for
 	 * RMI_OP_MEM_DONATE.
 	 *
-	 * 	- complete
-	 * 	- mem_state
+	 *	- complete
+	 *	- mem_state
 	 */
 	struct smc_args args;
 
@@ -128,14 +128,14 @@ static unsigned long calc_entry_size(unsigned long entry)
 }
 
 /* Return the amount of memory requested in a donate operation */
-static unsigned long calc_total_mem(unsigned long *list, unsigned int count)
+static unsigned long calc_total_mem(const unsigned long *list, unsigned long count)
 {
 	unsigned long size = 0UL;
 
 	assert(count > 0U);
 
-	for (unsigned int i = 0U; i < count; i++) {
-		size += calc_entry_size(*(list + i));
+	for (unsigned long i = 0UL; i < count; i++) {
+		size += calc_entry_size(list[i]);
 	}
 
 	return size;
@@ -148,20 +148,20 @@ static unsigned long calc_total_mem(unsigned long *list, unsigned int count)
  * an address and a sized field.
  * The size field indicates how large a memory region that entry describes
  * (e.g. a 4KB page, a 2MB block or a 1GB block). The minimum alignment is
- * the biggest block size found accross all entries. For instance, if one
+ * the biggest block size found across all entries. For instance, if one
  * entry describes a 2MB block and another describes a 4KB page, the minimum
  * alignment would be 2MB.
  */
-static unsigned long min_alignment_req(unsigned long *list, unsigned int count)
+static unsigned long min_alignment_req(const unsigned long *list, unsigned long count)
 {
 	unsigned long alignment = XLAT_BLOCK_SIZE(XLAT_TABLE_LEVEL_MAX -
-			(EXTRACT(RMI_ADDR_RDESC_4K_SZ, (*list))));
+			(EXTRACT(RMI_ADDR_RDESC_4K_SZ, list[0])));
 
-	assert(count > 0U);
+	assert(count > 0UL);
 
-	for (unsigned int i = 1U; i < count; i++) {
+	for (unsigned long i = 1UL; i < count; i++) {
 		unsigned long new_alignment = XLAT_BLOCK_SIZE(XLAT_TABLE_LEVEL_MAX -
-			(EXTRACT(RMI_ADDR_RDESC_4K_SZ, (*(list + i)))));
+			(EXTRACT(RMI_ADDR_RDESC_4K_SZ, list[i])));
 
 		if (new_alignment > alignment) {
 			/* Required alignment is larger than the current one */
@@ -184,8 +184,8 @@ void smc_op_mem_donate(unsigned long handle,
 	unsigned long entry_addr;
 	unsigned long total_xfer_memory;
 	unsigned long min_alignment;
-	unsigned long list_offset;
-	unsigned long list_buffer[MAX_LIST_ENTRIES] __aligned(GRANULE_SIZE);
+	unsigned int list_offset;
+	unsigned long list_buffer[MAX_LIST_ENTRIES] __aligned(GRANULE_SIZE) = {0UL};
 
 	if (!ALIGNED(list_addr, sizeof(unsigned long))) {
 		res->x[0] = RMI_ERROR_INPUT;
@@ -220,7 +220,7 @@ void smc_op_mem_donate(unsigned long handle,
 	 * Calculate the offset of the first entry with regards to the start
 	 * of the granule where the list is.
 	 */
-	list_offset = ((list_addr & ~GRANULE_MASK) >> 3U);
+	list_offset = (unsigned int)((list_addr & ~GRANULE_MASK) >> 3U);
 
 	/*
 	 * Limit the number of entries to not cross granules.
@@ -228,6 +228,8 @@ void smc_op_mem_donate(unsigned long handle,
 	 */
 	list_count = (((list_count + list_offset) > MAX_LIST_ENTRIES) ?
 				(MAX_LIST_ENTRIES - list_offset) : list_count);
+
+	assert(list_count <= MAX_LIST_ENTRIES);
 
 	list_gr = find_lock_granule((list_addr & GRANULE_MASK), GRANULE_STATE_NS);
 
@@ -254,9 +256,10 @@ void smc_op_mem_donate(unsigned long handle,
 		return;
 	}
 
+
 	if (!ns_buffer_read(SLOT_NS, list_gr,
-			    (list_offset * sizeof(unsigned long)),
-			    (list_count * sizeof(unsigned long)),
+			    (list_offset * (unsigned int)sizeof(unsigned long)),
+			    ((size_t)list_count * sizeof(unsigned long)),
 			    (void *)&list_buffer[0])) {
 		res->x[0] = RMI_ERROR_INPUT;
 
@@ -267,18 +270,8 @@ void smc_op_mem_donate(unsigned long handle,
 	granule_unlock(list_gr);
 
 	sro->current_transfer = calc_total_mem(&list_buffer[0], list_count);
-	if (sro->current_transfer > sro->transfer_req) {
-		res->x[0] = RMI_ERROR_INPUT;
-		(void)sro_ctx_seal();
-		return;
-	}
-
-	/*
-	 * Enforce a uniform alignment constraint across all address entries
-	 * in the donation list, ensuring they are all aligned to the largest
-	 * block size described by any entry in the list.
-	 */
 	min_alignment = min_alignment_req(&list_buffer[0], list_count);
+
 	for (unsigned long i = 0UL; i < list_count; i++) {
 		entry_addr = RMI_ADDR_RDESC_4K_GET_ADDR(list_buffer[i]);
 
@@ -290,10 +283,18 @@ void smc_op_mem_donate(unsigned long handle,
 		}
 	}
 
+	if (sro->current_transfer > sro->transfer_req) {
+		res->x[0] = RMI_ERROR_INPUT;
+
+		(void)sro_ctx_seal();
+		return;
+	}
+
 	list_ptr = (unsigned long)&list_buffer[0];
 	do_rmi_mem_op(SMC_RMI_OP_MEM_DONATE, handle, list_ptr, list_count, res);
 
 	/* Update the amount of memory left to transfer */
+	assert(res->x[1] <= MAX_LIST_ENTRIES);
 	total_xfer_memory = calc_total_mem(&list_buffer[0], res->x[1]);
 
 	/*
@@ -314,7 +315,7 @@ void smc_op_mem_reclaim(unsigned long handle,
 	unsigned long list_ptr;
 	unsigned long list_offset;
 	bool found;
-	unsigned long list_buffer[MAX_LIST_ENTRIES] __aligned(GRANULE_SIZE);
+	unsigned long list_buffer[MAX_LIST_ENTRIES] __aligned(GRANULE_SIZE) = {0UL};
 
 	if (!ALIGNED(list_addr, sizeof(unsigned long))) {
 		res->x[0] = RMI_ERROR_INPUT;
@@ -337,6 +338,8 @@ void smc_op_mem_reclaim(unsigned long handle,
 	 */
 	list_count = (((list_count + list_offset) > MAX_LIST_ENTRIES) ?
 				(MAX_LIST_ENTRIES - list_offset) : list_count);
+
+	assert(list_count <= MAX_LIST_ENTRIES);
 
 	list_ptr = (unsigned long)&list_buffer[0];
 
@@ -361,9 +364,11 @@ void smc_op_mem_reclaim(unsigned long handle,
 		return;
 	}
 
+	assert(res->x[1] <= MAX_LIST_ENTRIES);
+
 	if (!ns_buffer_write(SLOT_NS, list_gr,
-			     (list_offset * sizeof(unsigned long)),
-			     (res->x[1] * sizeof(unsigned long)),
+			     (list_offset * (unsigned int)sizeof(unsigned long)),
+			     ((size_t)list_count * sizeof(unsigned long)),
 			     (void *)&list_buffer[0])) {
 		res->x[0] = RMI_ERROR_INPUT;
 		return;
@@ -378,8 +383,9 @@ void smc_op_continue(unsigned long flags,
 {
 	struct smc_args args;
 	struct sro_context *sro __unused;
-	bool found = sro_ctx_find(handle);
+	bool found;
 
+	found = sro_ctx_find(handle);
 	if (found == false) {
 		res->x[0] = RMI_ERROR_INPUT;
 		return;
@@ -400,8 +406,9 @@ void smc_op_cancel(unsigned long flags,
 {
 	struct smc_args args;
 	struct sro_context *sro;
-	bool found = sro_ctx_find(handle);
+	bool found;
 
+	found = sro_ctx_find(handle);
 	if (found == false) {
 		res->x[0] = RMI_ERROR_INPUT;
 		return;

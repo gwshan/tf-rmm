@@ -5,7 +5,6 @@
 
 #include <assert.h>
 #include <cpuid.h>
-#include <debug.h>
 #include <runtime_ctrl.h>
 #include <smc-rmi.h>
 #include <smc.h>
@@ -37,7 +36,8 @@ void rtc_set_command(unsigned long fid)
 
 bool rtc_exit(void *args)
 {
-	unsigned int handler_id = RMI_HANDLER_ID(current_fid[my_cpuid()]);
+	unsigned int handler_id =
+		(unsigned int)RMI_HANDLER_ID(current_fid[my_cpuid()]);
 	bool retval;
 
 	assert(handler_id < ARRAY_SIZE(rtc_handlers));
@@ -52,7 +52,7 @@ bool rtc_exit(void *args)
 		 * rtc_set_command() again upon entry if later queries for
 		 * exit are needed.
 		 */
-	       current_fid[my_cpuid()] = 0UL;
+		current_fid[my_cpuid()] = 0UL;
 	}
 
 	return retval;
