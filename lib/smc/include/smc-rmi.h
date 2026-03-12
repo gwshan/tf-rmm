@@ -1017,6 +1017,16 @@
  */
 #define SMC_RMI_RMM_ACTIVATE			SMC64_RMI_FID(U(0xB2))
 
+/*
+ * Possible states of the RMM. Note that some SMCs can only be
+ * dispatched when state is RMM_STATE_ACTIVE.
+ */
+enum rmm_state {
+	RMM_STATE_INIT,
+	RMM_STATE_INTERMEDIATE,
+	RMM_STATE_ACTIVE
+};
+
 /* Size of Realm Personalization Value */
 #ifndef CBMC
 #define RPV_SIZE		64
