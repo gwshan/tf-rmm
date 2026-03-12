@@ -32,8 +32,7 @@ void __init_global_state(unsigned long cmd)
 			return;
 		}
 	case SMC_RMI_REALM_ACTIVATE:
-	case SMC_RMI_REALM_DESTROY:
-	case SMC_RMI_REC_AUX_COUNT: {
+	case SMC_RMI_REALM_DESTROY: {
 			init_realm_descriptor_page();
 			return;
 		}
@@ -83,7 +82,8 @@ void tb_handle_smc(struct tb_regs *config)
 		config->X1 = res.x[1];
 		break;
 	case SMC_RMI_REC_DESTROY:
-		result = smc_rec_destroy(config->X1);
+		smc_rec_destroy(config->X1, &res);
+		result = res.x[0];
 		break;
 	case SMC_RMI_VERSION:
 		smc_version(config->X1, &res);
