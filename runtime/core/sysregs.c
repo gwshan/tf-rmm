@@ -68,6 +68,8 @@ static bool handle_id_sysreg_trap(struct rec *rec,
 		mask = MASK(ID_AA64DFR0_EL1_BRBE);
 		value &= ~mask;
 
+		/* Temp disable PMU */
+		value &= ~MASK(ID_AA64DFR0_EL1_PMUVer);
 		break;
 	SYSREG_CASE(DFR1)
 		value = READ_CACHED_REG(id_aa64dfr1_el1);
