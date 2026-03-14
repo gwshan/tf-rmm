@@ -27,7 +27,9 @@ void __init_global_state(unsigned long cmd)
 
 	switch (cmd) {
 	case SMC_RMI_GRANULE_DELEGATE:
-	case SMC_RMI_GRANULE_UNDELEGATE: {
+	case SMC_RMI_GRANULE_UNDELEGATE:
+	case SMC_RMI_GRANULE_RANGE_DELEGATE:
+	case SMC_RMI_GRANULE_RANGE_UNDELEGATE: {
 			init_granule_and_page();
 			return;
 		}
@@ -69,6 +71,16 @@ void tb_handle_smc(struct tb_regs *config)
 		break;
 	case SMC_RMI_GRANULE_UNDELEGATE:
 		result = smc_granule_undelegate(config->X1);
+		break;
+	case SMC_RMI_GRANULE_RANGE_DELEGATE:
+		smc_granule_range_delegate(config->X1, config->X2, &res);
+		result = res.x[0];
+		config->X1 = res.x[1];
+		break;
+	case SMC_RMI_GRANULE_RANGE_UNDELEGATE:
+		smc_granule_range_undelegate(config->X1, config->X2, &res);
+		result = res.x[0];
+		config->X1 = res.x[1];
 		break;
 	case SMC_RMI_REALM_ACTIVATE:
 		result = smc_realm_activate(config->X1);

@@ -17,12 +17,14 @@
  * `--entry-point tb_rmi_granule_undelegate`.
  *
  * Arguments:
- *     addr: PA of the target Granule.
+ *     base: PA of the first Granule in the target range.
+ *     top: PA of the last Granule in the target range.
  *
  * Returns:
  *     bool: Output value.
  */
 bool tb_rmi_granule_undelegate(
-	uint64_t addr);
+	uint64_t base,
+	uint64_t top);
 
 #endif /* __TB_RMI_GRANULE_UNDELEGATE_H */

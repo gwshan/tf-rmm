@@ -10,7 +10,8 @@
 #include "tb_rmi_granule_undelegate.h"
 
 bool tb_rmi_granule_undelegate(
-	uint64_t addr)
+	uint64_t base,
+	uint64_t top)
 {
 	/*
 	 * Initialize registers
@@ -18,8 +19,9 @@ bool tb_rmi_granule_undelegate(
 
 	struct tb_regs __tb_regs = __tb_arb_regs();
 
-	__tb_regs.X0 = SMC_RMI_GRANULE_UNDELEGATE;
-	__tb_regs.X1 = (uint64_t)addr;
+	__tb_regs.X0 = SMC_RMI_GRANULE_RANGE_UNDELEGATE;
+	__tb_regs.X1 = (uint64_t)base;
+	__tb_regs.X2 = (uint64_t)top;
 
 	/*
 	 * Initialize global state
@@ -31,11 +33,13 @@ bool tb_rmi_granule_undelegate(
 	 * Pre-conditions
 	 */
 
-	bool failure_gran_align_pre = !AddrIsGranuleAligned(addr);
-	bool failure_gran_bound_pre = !PaIsDelegable(addr);
-	bool failure_gran_state_pre = Granule(addr).state != DELEGATED;
+	bool failure_gran_align_pre = !AddrIsGranuleAligned(base) || !AddrIsGranuleAligned(top);
+	bool failure_gran_bound_pre = !PaIsDelegable(base) || !PaIsDelegable(top);
+	bool failure_gran_range_pre = top < (base + RMM_GRANULE_SIZE);
+	bool failure_gran_state_pre = Granule(base).state != DELEGATED;
 	bool no_failures_pre = !failure_gran_align_pre
 		&& !failure_gran_bound_pre
+		&& !failure_gran_range_pre
 		&& !failure_gran_state_pre;
 
 	/*
@@ -44,17 +48,24 @@ bool tb_rmi_granule_undelegate(
 
 	tb_handle_smc(&__tb_regs);
 	uint64_t result = __tb_regs.X0;
+	uint64_t next_addr = __tb_regs.X1;
 
 	/*
 	 * Post-conditions
 	 */
 
-	bool failure_gran_align_post = ResultEqual_2(result, RMI_ERROR_INPUT);
-	bool failure_gran_bound_post = ResultEqual_2(result, RMI_ERROR_INPUT);
-	bool failure_gran_state_post = ResultEqual_2(result, RMI_ERROR_INPUT);
-	bool success_gran_gpt_post = Granule(addr).gpt == GPT_NS;
-	bool success_gran_state_post = Granule(addr).state == UNDELEGATED;
+	bool failure_gran_align_post = ResultEqual_2(result, RMI_ERROR_INPUT) &&
+					       (next_addr == base);
+	bool failure_gran_bound_post = ResultEqual_2(result, RMI_ERROR_INPUT) &&
+					       (next_addr == base);
+	bool failure_gran_range_post = ResultEqual_2(result, RMI_ERROR_INPUT) &&
+					       (next_addr == base);
+	bool failure_gran_state_post = ResultEqual_2(result, RMI_ERROR_INPUT) &&
+					       (next_addr == base);
+	bool success_gran_gpt_post = Granule(base).gpt == GPT_NS;
+	bool success_gran_state_post = Granule(base).state == UNDELEGATED;
 	bool success_gran_content_post = true;
+	bool success_gran_next_addr_post = (next_addr == (base + RMM_GRANULE_SIZE));
 
 	/*
 	 * Failure condition assertions
@@ -81,8 +92,21 @@ bool tb_rmi_granule_undelegate(
 		__ASSERT(prop_failure_gran_bound_cons, "prop_failure_gran_bound_cons");
 	}
 
+	bool prop_failure_gran_range_ante = !failure_gran_align_pre
+		&& !failure_gran_bound_pre
+		&& failure_gran_range_pre;
+
+	__COVER(prop_failure_gran_range_ante);
+	if (prop_failure_gran_range_ante) {
+		bool prop_failure_gran_range_cons = failure_gran_range_post;
+
+		__COVER(prop_failure_gran_range_cons);
+		__ASSERT(prop_failure_gran_range_cons, "prop_failure_gran_range_cons");
+	}
+
 	bool prop_failure_gran_state_ante = !failure_gran_align_pre
 		&& !failure_gran_bound_pre
+		&& !failure_gran_range_pre
 		&& failure_gran_state_pre;
 
 	__COVER(prop_failure_gran_state_ante);
@@ -142,6 +166,17 @@ bool tb_rmi_granule_undelegate(
 
 		__COVER(prop_success_gran_content_cons);
 		__ASSERT(prop_success_gran_content_cons, "prop_success_gran_content_cons");
+	}
+
+	bool prop_success_gran_next_addr_ante = no_failures_pre;
+
+	__COVER(prop_success_gran_next_addr_ante);
+	if (prop_success_gran_next_addr_ante) {
+		bool prop_success_gran_next_addr_cons = success_gran_next_addr_post
+		&& (result == RMI_SUCCESS);
+
+		__COVER(prop_success_gran_next_addr_cons);
+		__ASSERT(prop_success_gran_next_addr_cons, "prop_success_gran_next_addr_cons");
 	}
 
 	/*

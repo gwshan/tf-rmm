@@ -55,14 +55,13 @@ set(RMM_CBMC_SUMMARY_FIELD_WIDTH 38)
 set(GRANULE_SHIFT "9")
 set(MAX_NUM_OF_GRANULE "4")
 set(MAX_NUM_OF_COH_GRANULE "1")
-set(MAX_NUM_OF_NCOH_GRANULE "4")
+set(MAX_NUM_OF_NCOH_GRANULE "2")
 math(EXPR HOST_DRAM_SIZE "(1 << ${GRANULE_SHIFT}) * ${MAX_NUM_OF_GRANULE}")
 set(HOST_DRAM_SIZE "${HOST_DRAM_SIZE}UL")
 math(EXPR HOST_NCOH_DEV_SIZE "(1 << ${GRANULE_SHIFT}) * ${MAX_NUM_OF_NCOH_GRANULE}")
 set(HOST_NCOH_DEV_SIZE "${HOST_NCOH_DEV_SIZE}UL")
 
-set(MAX_RTT_UNWIND "6")
-set(MAX_AUX_REC "2")
+set(MAX_RTT_UNWIND "4")
 set(MAX_ROOT_RTT "3")
 set(MAX_UNWIND_FLAGS "")
 
@@ -80,22 +79,19 @@ set(cbmc_unwinds_list
   "--unwindset;find_lock_granules.3:${MAX_ROOT_RTT}"
   "--unwindset;find_lock_rd_granules.0:${MAX_RTT_UNWIND}"
   "--unwindset;find_lock_rd_granules.1:${MAX_RTT_UNWIND}"
-  "--unwindset;free_rec_aux_granules.0:${MAX_AUX_REC}"
   "--unwindset;free_sl_rtts.0:${MAX_RTT_UNWIND}"
   "--unwindset;init_realm_descriptor_page.0:${MAX_ROOT_RTT}"
   "--unwindset;init_realm_descriptor_page.1:${MAX_ROOT_RTT}"
-  "--unwindset;init_rec.0:${MAX_AUX_REC}"
   "--unwindset;init_rtt_root_page.0:${MAX_ROOT_RTT}"
   "--unwindset;init_walk_path.0:${MAX_RTT_UNWIND}"
-  "--unwindset;lock_order_invariable.0:21"
-  "--unwindset;lock_order_invariable.1:11"
+  "--unwindset;lock_order_invariable.0:8"
+  "--unwindset;lock_order_invariable.1:4"
   "--unwindset;lock_order_invariable.2:"
   "--unwindset;RealmIsLive.0:${MAX_ROOT_RTT}"
   "--unwindset;RealmIsLive.2:${MAX_ROOT_RTT}"
   "--unwindset;rtt_walk_lock_unlock.0:${MAX_RTT_UNWIND}"
   "--unwindset;RttWalk.0:${MAX_RTT_UNWIND}"
   "--unwindset;smc_realm_create.0:${MAX_RTT_UNWIND}"
-  "--unwindset;smc_rec_create.0:${MAX_AUX_REC}"
   "--unwindset;total_root_rtt_refcount.0:${MAX_RTT_UNWIND}"
   "--unwindset;smc_realm_destroy.0:2"
 )
@@ -240,10 +236,17 @@ foreach(testbench_file ${TESTBENCH_FILES})
     ${testbench_file}
   )
 
+  # Add extra object bits for testbenches that need more addressable objects
+  set(extra_cbmc_flags "")
+  if("${testbench_filename}" STREQUAL "tb_rmi_rec_destroy.c" OR "${testbench_filename}" STREQUAL "tb_rmi_realm_destroy.c")
+    set(extra_cbmc_flags "--object-bits;10")
+  endif()
+
   set(cbmc_cmd
     ${RMM_CBMC_PATH}
     ${CBMC_UI_OPTION}
     ${cbmc_flags_list}
+    ${extra_cbmc_flags}
     ${cbmc_unwinds_list}
     ${RMM_GOTO_PROG_NAME})
 

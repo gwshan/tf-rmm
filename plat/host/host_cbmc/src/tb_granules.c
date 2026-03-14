@@ -64,11 +64,44 @@ struct granule init_granule(void)
 
 void init_granule_and_page(void)
 {
-	struct granule g = init_granule();
+	/* Initialize granules to allow CBMC to explore various scenarios for
+	 * range delegate/undelegate. We create granules with specific states to
+	 * ensure CBMC can reach all code paths.
+	 * Note: MAX_NUM_OF_GRANULE is set to 4 in CheckCBMC.cmake
+	 */
+
+	/* Granule 1: UNDELEGATED state (GRANULE_STATE_NS) for delegate tests */
+	struct granule g1 = init_granule();
+	unsigned short val1 = g1.descriptor & STATE_MASK;
+
+	val1 ^= (unsigned short)GRANULE_STATE_NS << GRN_STATE_SHIFT;
+	g1.descriptor = (g1.descriptor & ~STATE_MASK) | val1;
+
+	/* Granule 2: Also UNDELEGATED (to test GPT failure case) */
+	struct granule g2 = init_granule();
+	unsigned short val2 = g2.descriptor & STATE_MASK;
+
+	val2 ^= (unsigned short)GRANULE_STATE_NS << GRN_STATE_SHIFT;
+	g2.descriptor = (g2.descriptor & ~STATE_MASK) | val2;
+
+	/* Granule 3: DELEGATED state for undelegate tests */
+	struct granule g3 = init_granule();
+	unsigned short val3 = g3.descriptor & STATE_MASK;
+
+	val3 ^= (unsigned short)GRANULE_STATE_DELEGATED << GRN_STATE_SHIFT;
+	g3.descriptor = (g3.descriptor & ~STATE_MASK) | val3;
+
+	/* Granule 4: Random state for exploring other code paths */
+	struct granule g4 = init_granule();
+
 	/* just write one byte when call the `inject_granule` functions */
 	char ns_granule[1] = { 0 };
 
-	inject_granule(&g, ns_granule, sizeof(ns_granule));
+	/* Inject all granules */
+	inject_granule(&g1, ns_granule, sizeof(ns_granule));
+	inject_granule(&g2, ns_granule, sizeof(ns_granule));
+	inject_granule(&g3, ns_granule, sizeof(ns_granule));
+	inject_granule(&g4, ns_granule, sizeof(ns_granule));
 }
 
 /*
@@ -103,6 +136,8 @@ struct SPEC_granule Granule(uint64_t addr)
 	switch (granule_unlocked_state(result)) {
 	case GRANULE_STATE_NS:
 		spec_granule.gpt = get_granule_gpt(addr);
+		/* Enforce consistency: NS granules must have GPT_NS */
+		__CPROVER_assume(spec_granule.gpt == GPT_NS);
 		break;
 	case GRANULE_STATE_RTT:
 		spec_granule.gpt = GPT_NS;

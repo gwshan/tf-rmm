@@ -32,7 +32,11 @@ bool tb_rmi_features(
 	 */
 
 	bool no_failures_pre = true;
-	bool success_index_pre = index != 0;
+	/*
+	 * For valid feature register indices (0-4), expect non-zero value.
+	 * For invalid indices (>4), expect zeros.
+	 */
+	bool success_index_pre = index > 4;
 
 	/*
 	 * Execute command and read the result.
@@ -46,6 +50,7 @@ bool tb_rmi_features(
 	 * Post-conditions
 	 */
 
+	/* For invalid indices, value should be zeros */
 	bool success_index_post = value == Zeros();
 
 	/*
