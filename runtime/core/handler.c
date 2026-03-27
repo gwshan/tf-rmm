@@ -315,6 +315,9 @@ static void rmi_log_on_exit(unsigned int handler_id,
 		    (function_id == SMC_RMI_RTT_UNPROT_UNMAP)))) {
 			/* Print output values */
 			num = ((unsigned int)handler->type >> 8) & 0xFFU;
+			if (rc.status == RMI_INCOMPLETE) {
+				num = 4U;
+			}
 			assert(num <= MAX_NUM_OUTPUT_VALS);
 
 			for (unsigned int i = 1U; i <= num; i++) {
