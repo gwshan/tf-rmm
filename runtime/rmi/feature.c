@@ -60,9 +60,8 @@ unsigned long get_feature_register_0(void)
 			INPLACE(RMI_FEATURE_REGISTER_0_LPA2, RMI_FEATURE_TRUE);
 	}
 
-
-	/* RMM supports PMUv3p7+ */
-	assert(read_pmu_version() >= ID_AA64DFR0_EL1_PMUv3p7);
+	/* RMM supports PMUv3p5+ */
+	assert(read_pmu_version() >= ID_AA64DFR0_EL1_PMUv3p5);
 #if 0
 	/* Temp disable PMU */
 	/* Set support for PMUv3 */
