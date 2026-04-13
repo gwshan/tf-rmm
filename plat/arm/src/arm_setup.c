@@ -85,6 +85,7 @@ static void setup_root_complex_list(void)
 		 * the info will fail(since RMM does not have any info to
 		 * validate against).
 		 */
+		return;
 		ERROR("Invalid: Root Complex list\n");
 		rmm_el3_ifc_report_fail_to_el3(ret);
 	}
