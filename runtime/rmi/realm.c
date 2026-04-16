@@ -958,6 +958,7 @@ static void realm_create_continue(unsigned long fid, struct smc_result *res)
 	rd->da_enabled = EXTRACT(RMI_REALM_FLAGS0_DA, realm_ctx->flags0) != 0UL;
 	rd_vdev_refcount_reset(rd);
 
+	init_rd_obj_map_epoch(rd);
 	init_overlay_permissions(rd);
 
 	for (unsigned int i = 0U; i < realm_num_s2_rtts(rd); i++) {
