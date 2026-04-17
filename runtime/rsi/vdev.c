@@ -120,15 +120,6 @@ out:
 	rsi_vdev_release_objects(&lock_set);
 }
 
-bool finish_rsi_vdev_dma_enable(struct rec *rec,
-				bool *request_finished)
-{
-	/* TODO: Remove this */
-	(void)rec;
-	(void)request_finished;
-	return true;
-}
-
 void handle_rsi_vdev_dma_disable(struct rec *rec,
 				 struct rmi_rec_exit *rec_exit,
 				 struct rsi_result *res)
@@ -175,15 +166,6 @@ void handle_rsi_vdev_dma_disable(struct rec *rec,
 
 out:
 	rsi_vdev_release_objects(&lock_set);
-}
-
-bool finish_rsi_vdev_dma_disable(struct rec *rec,
-				 bool *request_finished)
-{
-	/* TODO: Remove this */
-	(void)rec;
-	(void)request_finished;
-	return true;
 }
 
 static void vdev_get_info(struct pdev *pd, struct vdev *vd, struct rsi_vdev_info *vdev_info);
@@ -310,21 +292,6 @@ static void vdev_get_info(struct pdev *pd, struct vdev *vd, struct rsi_vdev_info
 		     vd->ifc_report_digest.len);
 }
 
-/*
- * Return 'true' if execution should continue in the REC, otherwise return
- * 'false' to go back to the NS caller.
- */
-bool finish_rsi_vdev_get_info(struct rec *rec,
-			      struct rmi_rec_exit *rec_exit,
-			      bool *request_finished)
-{
-	/* TODO: remove this */
-	(void)rec;
-	(void)rec_exit;
-	(void)request_finished;
-	return true;
-}
-
 void handle_rsi_vdev_validate_mapping(struct rec *rec,
 				      struct rmi_rec_exit *rec_exit,
 				      struct rsi_result *res)
@@ -423,21 +390,6 @@ void handle_rsi_vdev_validate_mapping(struct rec *rec,
 
 out_unlock:
 	rsi_vdev_release_objects(&lock_set);
-}
-
-/*
- * Return 'true' if execution should continue in the REC, otherwise return
- * 'false' to go back to the NS caller.
- */
-bool finish_rsi_vdev_validate_mapping(struct rec *rec,
-				      struct rmi_rec_exit *rec_exit,
-				      bool *request_finished)
-{
-	/* TODO: Remove this */
-	(void)rec;
-	(void)rec_exit;
-	(void)request_finished;
-	return true;
 }
 
 static void rsi_vdev_release_objects(struct rsi_vdev_obj *lock_set)
