@@ -758,6 +758,42 @@ static unsigned long total_root_rtt_refcount(struct granule *g_rtt,
 	return refcount;
 }
 
+unsigned long smc_realm_terminate(unsigned long rd_addr)
+{
+	struct granule *g_rd;
+	struct rd *rd;
+
+	if (!GRANULE_ALIGNED(rd_addr)) {
+		return RMI_ERROR_INPUT;
+	}
+
+	g_rd = find_lock_granule(rd_addr, GRANULE_STATE_RD);
+	if (g_rd == NULL) {
+		return RMI_ERROR_INPUT;
+	}
+
+	rd = buffer_granule_map(g_rd, SLOT_RD);
+	assert(rd != NULL);
+
+	/*
+	 * Atomically transition XX+count==0 → ZOMBIE+count==0.
+	 * CAS with acquire-release pairs with the release decrement in
+	 * smc_rec_enter(), ensuring we only succeed when all RECs have
+	 * truly exited.
+	 */
+	if (!rd_cas_state_if_count_zero(rd,
+				get_rd_state_locked(rd),
+				REALM_ZOMBIE)) {
+		buffer_unmap(rd);
+		granule_unlock(g_rd);
+		return RMI_ERROR_REALM;
+	}
+
+	buffer_unmap(rd);
+	granule_unlock(g_rd);
+	return RMI_SUCCESS;
+}
+
 unsigned long smc_realm_destroy(unsigned long rd_addr)
 {
 	struct granule *g_rd;
@@ -765,6 +801,10 @@ unsigned long smc_realm_destroy(unsigned long rd_addr)
 	struct rd *rd;
 	unsigned int num_rtts, mecid;
 	int res;
+
+	if (!GRANULE_ALIGNED(rd_addr)) {
+		return RMI_ERROR_INPUT;
+	}
 
 	/* RD should not be destroyed if refcount != 0. */
 	res = find_lock_unused_granule(rd_addr, GRANULE_STATE_RD, &g_rd);
@@ -781,6 +821,10 @@ unsigned long smc_realm_destroy(unsigned long rd_addr)
 	rd = buffer_granule_map(g_rd, SLOT_RD);
 	assert(rd != NULL);
 
+	if (get_rd_state_locked(rd) != REALM_ZOMBIE) {
+		goto error_realm;
+	}
+
 	num_rtts = plane_to_s2_context(rd, PLANE_0_ID)->num_root_rtts;
 	mecid = plane_to_s2_context(rd, PLANE_0_ID)->mecid;
 
@@ -792,9 +836,7 @@ unsigned long smc_realm_destroy(unsigned long rd_addr)
 
 		if ((total_root_rtt_refcount(g_rtt, num_rtts) != 0UL) ||
 		    (rd_vdev_refcount_get(rd) != 0UL)) {
-			buffer_unmap(rd);
-			granule_unlock(g_rd);
-			return RMI_ERROR_REALM;
+			goto error_realm;
 		}
 	}
 
@@ -831,4 +873,9 @@ unsigned long smc_realm_destroy(unsigned long rd_addr)
 	mecid_free(mecid);
 
 	return RMI_SUCCESS;
+
+error_realm:
+	buffer_unmap(rd);
+	granule_unlock(g_rd);
+	return RMI_ERROR_REALM;
 }
