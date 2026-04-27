@@ -756,7 +756,7 @@ unsigned long s2tte_create_assigned_dev_dev(const struct s2tt_context *s2_ctx,
 					    unsigned long s2tte, long level,
 					    unsigned long s2tte_ap)
 {
-	unsigned long s2tte_mask = (S2TTE_DEV_ATTRS_MASK | S2TTE_MEMATTR_MASK);
+	unsigned long s2tte_mask = (S2TTE_DEV_ATTRS_MASK | MASK(S2TTE_MEMATTR));
 	unsigned long attr;
 
 	assert(s2_ctx != NULL);
@@ -906,9 +906,9 @@ bool host_ns_s2tte_is_valid(const struct s2tt_context *s2_ctx,
 	}
 
 	/*
-	 * Only one value masked by S2TTE_MEMATTR_MASK is invalid/reserved.
+	 * Only one value masked by MASK(S2TTE_MEMATTR) is invalid/reserved.
 	 */
-	if ((s2tte & S2TTE_MEMATTR_MASK) == S2TTE_MEMATTR_FWB_RESERVED) {
+	if ((s2tte & MASK(S2TTE_MEMATTR)) == S2TTE_MEMATTR_FWB_RESERVED) {
 		return false;
 	}
 
@@ -1123,7 +1123,7 @@ static bool s2tte_check_assigned_ram_or_ns(const struct s2tt_context *s2_ctx,
 		return false;
 	}
 
-	attr = s2tte & (S2TTE_DEV_ATTRS_MASK | S2TTE_MEMATTR_MASK);
+	attr = s2tte & (S2TTE_DEV_ATTRS_MASK | MASK(S2TTE_MEMATTR));
 
 	/* Return false for device memory */
 	if ((attr == S2TTE_DEV_COH_ATTRS) || (attr == S2TTE_DEV_NCOH_ATTRS)) {
@@ -1180,7 +1180,7 @@ bool s2tte_is_assigned_dev_dev(const struct s2tt_context *s2_ctx,
 		return false;
 	}
 
-	attr = s2tte & (S2TTE_DEV_ATTRS_MASK | S2TTE_MEMATTR_MASK);
+	attr = s2tte & (S2TTE_DEV_ATTRS_MASK | MASK(S2TTE_MEMATTR));
 	lpa2 = s2_ctx->enable_lpa2;
 
 	/*
@@ -1268,7 +1268,7 @@ enum ripas s2tte_get_ripas(const struct s2tt_context *s2_ctx, unsigned long s2tt
 	if (valid_desc) {
 		__unused unsigned long desc_type = s2tte & S2TT_DESC_TYPE_MASK;
 		unsigned long attr = s2tte & (S2TTE_DEV_ATTRS_MASK |
-						S2TTE_MEMATTR_MASK);
+						MASK(S2TTE_MEMATTR));
 
 		assert((desc_type == S2TTE_L012_BLOCK) ||
 			(desc_type == S2TTE_L3_PAGE));
@@ -1625,7 +1625,7 @@ void s2tt_init_assigned_dev_dev(const struct s2tt_context *s2_ctx,
 				unsigned long pa, long level,
 				unsigned long s2tte_ap)
 {
-	unsigned long s2tte_mask = (S2TTE_DEV_ATTRS_MASK | S2TTE_MEMATTR_MASK);
+	unsigned long s2tte_mask = (S2TTE_DEV_ATTRS_MASK | MASK(S2TTE_MEMATTR));
 
 	assert(s2tt != NULL);
 	assert(level >= S2TT_MIN_DEV_BLOCK_LEVEL);

@@ -208,7 +208,7 @@ unsigned long s2tt_test_helpers_gen_ns_attrs(bool host, bool reserved)
 						    S2TTE_RW_AP_MASK));
 
 			/* Find out if we are done or not */
-			inv_attrs = ((attrs & S2TTE_MEMATTR_MASK) ==
+			inv_attrs = ((attrs & MASK(S2TTE_MEMATTR)) ==
 						S2TTE_MEMATTR_FWB_RESERVED);
 			done = (reserved == inv_attrs);
 
