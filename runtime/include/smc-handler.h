@@ -231,7 +231,7 @@ unsigned long smc_vdev_lock(unsigned long rd_addr, unsigned long pdev_addr,
 unsigned long smc_vdev_start(unsigned long rd_addr, unsigned long pdev_addr,
 					unsigned long vdev_addr);
 
-void smc_granule_tracking_get(unsigned long addr,
+void smc_granule_tracking_get(unsigned long start, unsigned long end,
 			      struct smc_result *res);
 unsigned long smc_rmm_activate(void);
 unsigned long smc_rmm_config_get(unsigned long config_ptr);
