@@ -61,8 +61,8 @@ unsigned long get_feature_register_0(void)
 	}
 
 
-	/* RMM supports PMUv3p7+ */
-	assert(read_pmu_version() >= ID_AA64DFR0_EL1_PMUv3p7);
+	/* RMM supports PMUv3p5+ */
+	assert(read_pmu_version() >= ID_AA64DFR0_EL1_PMUv3p5);
 	/* TODO: disable PMU temporarily for v2.0 */
 #if 0
 	/* Set support for PMUv3 */
