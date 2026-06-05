@@ -277,12 +277,14 @@ static bool validate_realm_params(struct rmi_realm_params *p,
 	if (is_lpa2_requested(p)  &&
 	    (EXTRACT(RMI_FEATURE_REGISTER_0_LPA2, feat_reg0) ==
 							RMI_FEATURE_FALSE)) {
+		INFO("%s: Invalid LPA2 flag\n", __func__);
 		return false;
 	}
 
 	/* Validate S2SZ field */
 	if ((p->s2sz < RMI_FEATURE_MIN_IPA_SIZE) ||
 	    (p->s2sz > EXTRACT(RMI_FEATURE_REGISTER_0_S2SZ, feat_reg0))) {
+		INFO("%s: Invalid s2sz\n", __func__);
 		return false;
 	}
 
@@ -294,6 +296,7 @@ static bool validate_realm_params(struct rmi_realm_params *p,
 		EXTRACT(RMI_FEATURE_REGISTER_0_NUM_BPS, feat_reg0)) ||
 		(p->num_wps == 0U) || (p->num_wps >
 		EXTRACT(RMI_FEATURE_REGISTER_0_NUM_WPS, feat_reg0))) {
+		INFO("%s: Invalid num_bps or num_wps\n", __func__);
 		return false;
 	}
 
@@ -301,12 +304,14 @@ static bool validate_realm_params(struct rmi_realm_params *p,
 	if (EXTRACT(RMI_REALM_FLAGS0_SVE, p->flags0) == RMI_FEATURE_TRUE) {
 		if (EXTRACT(RMI_FEATURE_REGISTER_0_SVE_EN, feat_reg0) ==
 						      RMI_FEATURE_FALSE) {
+			INFO("%s: Invalid SVE flag\n", __func__);
 			return false;
 		}
 
 		/* Validate SVE_VL value */
 		if (p->sve_vl >
 			EXTRACT(RMI_FEATURE_REGISTER_0_SVE_VL, feat_reg0)) {
+			INFO("%s: Invalid sve_vl\n", __func__);
 			return false;
 		}
 	}
@@ -320,6 +325,7 @@ static bool validate_realm_params(struct rmi_realm_params *p,
 	if (EXTRACT(RMI_REALM_FLAGS0_PMU, p->flags0) == RMI_FEATURE_TRUE) {
 		if (p->pmu_num_ctrs >
 		    EXTRACT(RMI_FEATURE_REGISTER_0_PMU_NUM_CTRS, feat_reg0)) {
+			INFO("%s: Invalid pmu_num_ctrs\n", __func__);
 			return false;
 		}
 
@@ -328,6 +334,7 @@ static bool validate_realm_params(struct rmi_realm_params *p,
 		 * FEAT_HMPN0 is implemented
 		 */
 		if ((p->pmu_num_ctrs == 0U) && !is_feat_hpmn0_present()) {
+			INFO("%s: Invalid hpmn0\n", __func__);
 			return false;
 		}
 	}
@@ -336,6 +343,7 @@ static bool validate_realm_params(struct rmi_realm_params *p,
 	if ((EXTRACT(RMI_REALM_FLAGS0_DA, p->flags0) == RMI_FEATURE_TRUE) &&
 	    (EXTRACT(RMI_FEATURE_REGISTER_2_DA_EN, feat_reg2) ==
 	     RMI_FEATURE_FALSE)) {
+		INFO("%s: Invalid DA flag\n", __func__);
 		return false;
 	}
 
@@ -343,28 +351,33 @@ static bool validate_realm_params(struct rmi_realm_params *p,
 	mec_policy = EXTRACT(RMI_REALM_FLAGS0_MEC_POLICY, p->flags0);
 	if ((mec_policy != RMI_MEC_POLICY_SHARED) &&
 	    (mec_policy != RMI_MEC_POLICY_PRIVATE)) {
+		INFO("%s: Invalid mec_policy\n", __func__);
 		return false;
 	}
 
 	if (!validate_ipa_bits_and_sl(p->s2sz, p->rtt_level_start,
 						is_lpa2_requested(p))) {
+		INFO("%s: Error from validate_ipa_bits_and_sl()\n", __func__);
 		return false;
 	}
 
 	if (s2_num_root_rtts(p->s2sz, (int)p->rtt_level_start) !=
 						p->rtt_num_start) {
+		INFO("%s: Error from s2_num_root_rtts()\n", __func__);
 		return false;
 	}
 
 	/* Validate num_aux_planes */
 	if ((p->num_aux_planes) >
 			EXTRACT(RMI_FEATURE_REGISTER_3_MAX_NUM_AUX_PLANES, feat_reg3)) {
+		INFO("%s: Invalid num_aux_planes\n", __func__);
 		return false;
 	}
 
 	/* Validate ats_plane */
 	/* @TODO: validate this check against the spec */
 	if (p->ats_plane > p->num_aux_planes) {
+		INFO("%s: Invalid ats_plane\n", __func__);
 		return false;
 	}
 
@@ -374,12 +387,14 @@ static bool validate_realm_params(struct rmi_realm_params *p,
 		/* Validate that we do not use single tree planes when not allowed */
 		if ((feat_reg3_plane_rtt == RMI_RTT_PLANE_AUX) &&
 		    (feat_flags1_rtt_tree_pp == 0UL)) {
+			INFO("%s: Invalid RMI_RTT_PLANE_AUX flag\n", __func__);
 			return false;
 		}
 
 		/* Validate that we do not use multiple tree planes when not allowed */
 		if ((feat_reg3_plane_rtt == RMI_RTT_PLANE_SINGLE) &&
 		    (feat_flags1_rtt_tree_pp > 0UL)) {
+			INFO("%s: Invalid RMI_RTT_PLANE_SINGLE\n", __func__);
 			return false;
 		}
 
@@ -391,6 +406,7 @@ static bool validate_realm_params(struct rmi_realm_params *p,
 		     (feat_flags1_s2ap_enc == RMI_S2AP_INDIRECT)) ||
 		    ((feat_flags1_rtt_tree_pp == 0UL) &&
 		     (feat_flags1_s2ap_enc == RMI_S2AP_DIRECT))) {
+			INFO("%s: Invalid RMI_S2AP_DIRECT\n", __func__);
 			return false;
 		}
 	}
@@ -404,6 +420,7 @@ static bool validate_realm_params(struct rmi_realm_params *p,
 	 */
 	if ((feat_flags1_s2ap_enc == RMI_S2AP_INDIRECT) &&
 	    (EXTRACT(RMI_FEATURE_REGISTER_3_RTT_S2AP_INDIRECT, feat_reg3) == RMI_FEATURE_FALSE)) {
+		INFO("%s: Invalid RMI_S2AP_INDIRECT flag\n", __func__);
 		return false;
 	}
 
@@ -433,6 +450,7 @@ static bool validate_realm_params(struct rmi_realm_params *p,
 	 */
 	for (unsigned int i = 0U; i < *n_rtts; i++) {
 		if ((rtt_base[i] & ((p->rtt_num_start * GRANULE_SIZE) - 1UL)) != 0UL) {
+			INFO("%s: mis-aligned RTT granules\n", __func__);
 			return false;
 		}
 	}
@@ -449,6 +467,7 @@ static bool validate_realm_params(struct rmi_realm_params *p,
 	case RMI_HASH_SHA_512:
 		break;
 	default:
+		INFO("%s: Invalid p->algorithm\n", __func__);
 		return false;
 	}
 
@@ -595,12 +614,14 @@ unsigned long smc_realm_create(unsigned long rd_addr,
 	bool rtt_tree_pp;
 
 	if (!get_realm_params(&p, realm_params_addr)) {
+		INFO("%s: Error from get_realm_params()\n", __func__);
 		return RMI_ERROR_INPUT;
 	}
 
 	/* coverity[uninit_use_in_call:SUPPRESS] */
 	if (!validate_realm_params(&p, &n_vmids, &n_rtts,
 				   &rtt_tree_pp, rtt_base, &ats_plane)) {
+		INFO("%s: Error from validate_realm_params()\n", __func__);
 		return RMI_ERROR_INPUT;
 	}
 
@@ -636,6 +657,7 @@ unsigned long smc_realm_create(unsigned long rd_addr,
 	if (!transition_sl_rtts(rtt_base, p.rtt_num_start, n_rtts)) {
 		free_vmids(vmid, n_vmids);
 		mecid_free(mecid);
+		INFO("%s: Error from transition_sl_rtts()\n", __func__);
 		return RMI_ERROR_INPUT;
 	}
 
@@ -649,6 +671,7 @@ unsigned long smc_realm_create(unsigned long rd_addr,
 		revert_sl_rtts(rtt_base, p.rtt_num_start, n_rtts);
 		free_vmids(vmid, n_vmids);
 		mecid_free(mecid);
+		INFO("%s: Invalid rd_addr\n", __func__);
 		return RMI_ERROR_INPUT;
 	}
 
