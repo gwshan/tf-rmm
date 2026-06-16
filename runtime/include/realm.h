@@ -9,6 +9,7 @@
 #include <assert.h>
 #include <atomics.h>
 #include <dev.h>
+#include <granule.h>
 #include <measurement.h>
 #include <memory.h>
 #include <planes.h>
@@ -26,6 +27,13 @@
  */
 #define S2AP_DIRECT_ENC		(false)
 #define S2AP_INDIRECT_ENC	(true)
+
+struct rd_aux {
+	/* TODO: Add useful members in later commits */
+	unsigned int unused;
+};
+COMPILER_ASSERT(MAX_RD_AUX_GRANULES >=
+		(sizeof(struct rd_aux) + GRANULE_SIZE - 1) / GRANULE_SIZE);
 
 /* struct rd is protected by the rd granule lock */
 struct rd {
@@ -70,6 +78,9 @@ struct rd {
 
 	/* Number of auxiliary REC granules for the Realm */
 	unsigned int num_rec_aux;
+
+	/* Number of auxiliary RD granules for the Realm */
+	unsigned int num_rd_aux;
 
 	/* Algorithm to use for measurements */
 	enum hash_algo algorithm;
@@ -129,6 +140,8 @@ struct rd {
 	 * request from devices assigned to the Realm.
 	 */
 	unsigned long ats_plane;
+
+	struct granule *aux_granules[MAX_RD_AUX_GRANULES];
 };
 COMPILER_ASSERT((U(offsetof(struct rd, measurement)) & 7U) == 0U);
 COMPILER_ASSERT(sizeof(struct rd) <= GRANULE_SIZE);
@@ -195,6 +208,8 @@ static inline bool rd_cas_state_if_count_zero(struct rd *rd,
 	return atomic_cas_acquire_release_64(
 		(uint64_t *)&rd->state_and_count, expected, desired);
 }
+
+void realm_continue_handler(unsigned long fid, struct smc_result *res);
 
 /*
  * Atomically increments active_rec_count only if the realm state is ACTIVE.
@@ -309,6 +324,7 @@ static inline struct s2tt_context *plane_to_s2_context(struct rd *rd,
 
 	assert(plane_id < realm_num_planes(rd));
 
+	/* NOLINTNEXTLINE(clang-analyzer-core.DivideZero) */
 	index = ((plane_id + 1U) % realm_num_planes(rd));
 	return &rd->s2_ctx[index];
 }

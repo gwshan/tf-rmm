@@ -34,11 +34,12 @@ unsigned long smc_granule_undelegate(unsigned long addr);
 
 unsigned long smc_realm_activate(unsigned long rd_addr);
 
-unsigned long smc_realm_create(unsigned long rd_addr,
-				unsigned long realm_params_addr);
+void smc_realm_create(unsigned long rd_addr,
+		      unsigned long realm_params_addr,
+		      struct smc_result *res);
 
 unsigned long smc_realm_terminate(unsigned long rd_addr);
-unsigned long smc_realm_destroy(unsigned long rd_addr);
+void smc_realm_destroy(unsigned long rd_addr, struct smc_result *res);
 
 void smc_rec_create(unsigned long rd_addr,
 		    unsigned long rec_addr,

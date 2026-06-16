@@ -250,6 +250,33 @@ struct sro_map_ctx {
 	bool rollback;			/* Rollback in progress */
 };
 
+/*
+ * Data structure with the information to continue a Realm related operation.
+ */
+struct sro_realm_ctx {
+	unsigned long flags0;
+	unsigned long flags1;
+	unsigned int s2sz;
+	unsigned int sve_vl;
+	unsigned int num_bps;
+	unsigned int num_wps;
+	unsigned int pmu_num_ctrs;
+	unsigned int num_aux_planes;
+	unsigned int rtt_num_start;
+	long rtt_level_start;
+	unsigned long ats_plane;
+	unsigned int n_vmids;
+	unsigned int n_rtts;
+	unsigned int mecid;
+	unsigned int num_rd_aux;
+	bool rtt_tree_pp;
+	unsigned char algorithm;
+	unsigned char rpv[RPV_SIZE];
+	unsigned char realm_instance_id[REALM_INSTANCE_ID_SIZE];
+	unsigned short vmid[MAX_AUX_PLANES + 1U];
+	unsigned long rtt_base[MAX_AUX_PLANES + 1U];
+};
+
 struct sro_context {
 	/* State of this context */
 	enum sro_state state;
@@ -311,6 +338,7 @@ struct sro_context {
 		struct sro_pdev_ctx pdev_ctx;
 		struct sro_unmap_ctx unmap_ctx;
 		struct sro_map_ctx map_ctx;
+		struct sro_realm_ctx realm_ctx;
 	};
 };
 

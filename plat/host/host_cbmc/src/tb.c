@@ -71,7 +71,8 @@ void tb_handle_smc(struct tb_regs *config)
 		result = smc_realm_activate(config->X1);
 		break;
 	case SMC_RMI_REALM_DESTROY:
-		result = smc_realm_destroy(config->X1);
+		smc_realm_destroy(config->X1, &res);
+		result = res.x[0];
 		break;
 	case SMC_RMI_REC_DESTROY:
 		smc_rec_destroy(config->X1, &res);
