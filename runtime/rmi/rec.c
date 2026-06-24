@@ -490,7 +490,7 @@ static void rec_create_continue(unsigned long fid, struct smc_result *res)
 	assert(rec != NULL);
 
 	rec->g_rec = g_rec;
-	rec->rec_idx = mpidr_to_rec_idx(rec_params.mpidr);
+	rec->rec_idx = rec_mpidr_to_idx(rec_params.mpidr);
 
 	rec->realm_info.num_aux_planes = rd->num_aux_planes;
 
@@ -760,11 +760,11 @@ void smc_rec_destroy(unsigned long rec_addr, struct smc_result *res)
 }
 
 unsigned long smc_psci_complete(unsigned long calling_rec_addr,
-				unsigned long target_rec_addr,
 				unsigned long status)
 {
 	struct granule *g_calling_rec, *g_target_rec;
 	struct rec  *calling_rec, *target_rec;
+	unsigned long target_rec_addr;
 	unsigned long ret;
 	void *target_rec_aux;
 
@@ -772,9 +772,18 @@ unsigned long smc_psci_complete(unsigned long calling_rec_addr,
 		return RMI_ERROR_INPUT;
 	}
 
-	if (!GRANULE_ALIGNED(target_rec_addr)) {
+	g_calling_rec = find_lock_granule(calling_rec_addr, GRANULE_STATE_REC);
+	if (g_calling_rec == NULL) {
 		return RMI_ERROR_INPUT;
 	}
+
+	calling_rec = buffer_granule_map(g_calling_rec, SLOT_REC);
+	assert(calling_rec != NULL);
+
+	target_rec_addr = calling_rec->target_rec_addr;
+
+	buffer_unmap(calling_rec);
+	granule_unlock(g_calling_rec);
 
 	if (!find_lock_two_granules(calling_rec_addr,
 					GRANULE_STATE_REC,

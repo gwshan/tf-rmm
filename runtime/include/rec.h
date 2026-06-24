@@ -296,6 +296,7 @@ struct rec { /* NOLINT: Suppressing optin.performance.Padding as fields are in l
 	bool runnable;
 
 	unsigned int pending_op; /* Type of COMPLETE operation pending */
+	uintptr_t target_rec_addr; /* valid in case pending_op is REC_PENDING_PSCI_COMPLETE */
 	bool da_enabled;
 
 	/*
@@ -364,15 +365,6 @@ struct rec { /* NOLINT: Suppressing optin.performance.Padding as fields are in l
 		bool rtt_tree_pp;
 		bool rtt_s2ap_encoding;
 	} realm_info;
-
-	/* Populated when REC issues RDEV request */
-	struct {
-		/* Virtual device ID */
-		unsigned long vdev_id;
-
-		/* PA of the vdev granule */
-		unsigned long vdev_addr;
-	} vdev;
 
 	/* Pointer to per-cpu non-secure state */
 	struct ns_state *ns;
@@ -553,6 +545,15 @@ static inline unsigned long mpidr_to_rec_idx(unsigned long mpidr)
 		MPIDR_EL1_AFF(1, mpidr) |
 		MPIDR_EL1_AFF(2, mpidr) |
 		MPIDR_EL1_AFF(3, mpidr));
+}
+
+/*
+ * Convert MPIDR_EL1 register type value to RmiRecMpidr format through the
+ * canonical REC linear index representation.
+ */
+static inline unsigned long mpidr_to_rec_mpidr(unsigned long mpidr)
+{
+	return rec_idx_to_mpidr(mpidr_to_rec_idx(mpidr));
 }
 
 /*
