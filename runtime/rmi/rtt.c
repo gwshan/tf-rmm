@@ -1387,9 +1387,18 @@ static void rtt_set_ripas_range(struct s2tt_context *s2_ctx,
 
 	/* Align to the RTT level */
 	unsigned long addr = base & ~(map_size - 1UL);
+	bool debug = (base == 0x80000000 && top == 0x90000000);
+
+	if (debug) {
+		INFO("%s: base=0x%lx, top=0x%lx, wi.index=%ld, wi.last_level=%ld\n",
+		     __func__, base, top, wi->index, wi->last_level);
+	}
 
 	/* Make sure we don't touch a range below the requested range */
 	if (addr != base) {
+		if (debug)
+			INFO("%s: addr != base\n", __func__);
+
 		res->x[0] = pack_return_code(RMI_ERROR_RTT,
 						(unsigned char)level);
 		return;
@@ -1436,6 +1445,11 @@ static void rtt_set_ripas_range(struct s2tt_context *s2_ctx,
 		ret = update_ripas(s2_ctx, &s2tt[index], level,
 					ripas_val, change_destroyed);
 		if (ret < 0) {
+			if (debug) {
+				INFO("%s: Error %d from update_ripas(), index=%ld, level=%ld\n",
+				     __func__, ret, index, level);
+			}
+
 			break;
 		}
 
@@ -1478,6 +1492,12 @@ void smc_rtt_set_ripas(unsigned long rd_addr,
 	struct s2tt_context *s2_ctx;
 	enum ripas ripas_val;
 	enum ripas_change_destroyed change_destroyed;
+        bool debug = (base == 0x80000000 && top == 0x90000000);
+
+        if (debug) {
+		INFO("%s: rd=0x%lx, rec=0x%lx, base=0x%lx, top=0x%lx\n",
+		     __func__, rd_addr, rec_addr, base, top);
+	}
 
 	if ((top <= base) || !GRANULE_ALIGNED(top)) {
 		res->x[0] = RMI_ERROR_INPUT;
@@ -1540,6 +1560,11 @@ void smc_rtt_set_ripas(unsigned long rd_addr,
 	 * it is mapped in RTT.
 	 */
 	if (!validate_map_addr(base, wi.last_level, rd)) {
+		if (debug) {
+			INFO("%s: Error on base=0x%lx, wi.last_level=%ld\n",
+			     __func__, base, wi.last_level);
+		}
+
 		res->x[0] = pack_return_code(RMI_ERROR_RTT,
 						(unsigned char)wi.last_level);
 		goto out_unlock_llt;
