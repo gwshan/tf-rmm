@@ -549,6 +549,9 @@ void app_framework_setup(void)
 	struct app_header *app_header;
 	struct app_id_data *app_id_data;
 
+	INFO("\n");
+	INFO("-----> %s\n", __func__);
+
 	/* coverity[misra_c_2012_rule_2_2_violation:SUPPRESS] */
 	collect_app_bss();
 
@@ -564,6 +567,7 @@ void app_framework_setup(void)
 		int ret __unused;
 		uintptr_t bss_pa;
 
+		INFO("----- %s: app_index=%ld\n", __func__, (unsigned long)app_index);
 		ret = app_get_header_ptr_at_index(app_index, &app_header);
 		assert(ret == 0);
 		app_id_data = &app_id_data_array[app_index];
@@ -573,6 +577,7 @@ void app_framework_setup(void)
 					GRANULE_SIZE,
 					PAGE_SIZE);
 		app_id_data->mm_regions_array[RMM_APP_APP_REG_CTX_MMAP_IDX] = region_app_reg_ctx;
+		INFO("    RMM_APP_APP_REG_CTX_MMAP_IDX: 0x%lx\n", (unsigned long)APP_VA_START);
 
 		struct xlat_mmap_region region_text = {
 			section_start_pa((uintptr_t)app_header, app_header->section_text_offset),
@@ -582,6 +587,7 @@ void app_framework_setup(void)
 			PAGE_SIZE
 		};
 		app_id_data->mm_regions_array[RMM_APP_TEXT_MMAP_IDX] = region_text;
+		INFO("    RMM_APP_TEXT_MMAP_IDX: 0x%lx\n", (unsigned long)(app_header->section_text_va));
 
 		struct xlat_mmap_region region_rodata = {
 			section_start_pa((uintptr_t)app_header, app_header->section_rodata_offset),
@@ -591,6 +597,7 @@ void app_framework_setup(void)
 			PAGE_SIZE
 		};
 		app_id_data->mm_regions_array[RMM_APP_RODATA_MMAP_IDX] = region_rodata;
+		INFO("    RMM_APP_RODATA_MMAP_IDX: 0x%lx\n", (unsigned long)(app_header->section_rodata_va));
 
 		struct xlat_mmap_region region_data = {
 			section_start_pa((uintptr_t)app_header, app_header->section_data_offset),
@@ -600,6 +607,7 @@ void app_framework_setup(void)
 			PAGE_SIZE
 		};
 		app_id_data->mm_regions_array[RMM_APP_DATA_MMAP_IDX] = region_data;
+		INFO("    RMM_APP_DATA_MMAP_IDX: 0x%lx\n", (unsigned long)(app_header->section_data_va));
 
 		ret = allocate_bss(app_header->app_id, app_header->section_bss_size, &bss_pa);
 		if (ret != 0) {
@@ -613,6 +621,7 @@ void app_framework_setup(void)
 			PAGE_SIZE
 		};
 		app_id_data->mm_regions_array[RMM_APP_BSS_MMAP_IDX] = region_bss;
+		INFO("    RMM_APP_BSS_MMAP_IDX: 0x%lx\n", (unsigned long)(app_header->section_bss_va));
 
 		/* Pages for sections below are allocated per instantiation of
 		 * the app.
@@ -623,6 +632,7 @@ void app_framework_setup(void)
 			PAGE_SIZE);
 		app_id_data->mm_regions_array[RMM_APP_SHARED_IDX] = region_shared;
 		app_id_data->el0_shared_page_va = region_shared.base_va;
+		INFO("    RMM_APP_SHARED_IDX: 0x%lx\n", (unsigned long)(app_id_data->el0_shared_page_va));
 
 		struct xlat_mmap_region region_heap = MAP_REGION_TRANSIENT(
 			/* Additional granule offset to base_va for heap underflow protection */
@@ -631,6 +641,7 @@ void app_framework_setup(void)
 			PAGE_SIZE);
 		app_id_data->mm_regions_array[RMM_APP_HEAP_IDX] = region_heap;
 		app_id_data->heap_va = region_heap.base_va;
+		INFO("    RMM_APP_HEAP_IDX: 0x%lx\n", (unsigned long)(app_id_data->heap_va));
 
 		struct xlat_mmap_region region_stack = MAP_REGION_TRANSIENT(
 			/* Additional granule offset to base_va for stack overflow protection */
@@ -639,6 +650,7 @@ void app_framework_setup(void)
 			PAGE_SIZE);
 		app_id_data->mm_regions_array[RMM_APP_STACK_IDX] = region_stack;
 		app_id_data->stack_buf_start_va = region_stack.base_va;
+		INFO("    RMM_APP_STACK_IDX: 0x%lx\n", (unsigned long)(app_id_data->stack_buf_start_va));
 
 		/* We are using here the same VA size that is configured for the high va
 		 * range, so that we can skip setting up other registers than ttbrx_el2

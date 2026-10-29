@@ -186,6 +186,9 @@ static int xlat_low_va_static_setup(struct xlat_mmap_region *plat_regions,
 		[MAP_REGION_VA_POOL] = RMM_VA_POOL,
 	};
 
+        INFO("\n");
+        INFO("-----> %s\n", __func__);
+ 
 	if (nregions > XLAT_EXTRA_MMAP_REGIONS) {
 		ERROR("%s: Number of platform regions exceeds maximum (%u)\n",
 			__func__, XLAT_EXTRA_MMAP_REGIONS);
@@ -213,6 +216,8 @@ static int xlat_low_va_static_setup(struct xlat_mmap_region *plat_regions,
 	regions[MAP_REGION_APP].base_pa = rmm_img_start;
 	regions[MAP_REGION_APP].base_va = rmm_img_start;
 	regions[MAP_REGION_APP].size = RMM_CODE_START - rmm_img_start;
+        INFO("%s: rmm_img_start=0x%lx, RMM_CODE_START=0x%lx\n",
+             __func__, (unsigned long)rmm_img_start, (unsigned long)RMM_CODE_START);
 
 	/* Setup the parameters of the shared area */
 	regions[MAP_REGION_SHARED].base_pa = get_shared_buf_pa();
